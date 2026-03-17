@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue3 + TS 俄罗斯方块</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/typescript@latest/lib/typescript.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+
+    .game-container {
+      display: flex;
+      gap: 30px;
+      padding: 20px;
+    }
+
+    .game-board {
+      background: #0f0f23;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(10, 30px);
+      grid-template-rows: repeat(20, 30px);
+      gap: 1px;
+      background: #1a1a2e;
+      border: 3px solid #4a4a6a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .cell {
+      width: 30px;
+      height: 30px;
+      transition: background-color 0.1s;
+    }
+
+    .cell.empty {
+      background: #0f0f23;
+    }
+
+    .cell.I { background: linear-gradient(145deg, #00f5ff, #00c8cc); box-shadow: 0 0 10px #00f5ff; }
+    .cell.O { background: linear-gradient(145deg, #ffeb3b, #fdd835); box-shadow: 0 0 10px #ffeb3b; }
+    .cell.T { background: linear-gradient(145deg, #e040fb, #d500f9); box-shadow: 0 0 10px #e040fb; }
+    .cell.S { background: linear-gradient(145deg, #76ff03, #64dd17); box-shadow: 0 0 10px #76ff03; }
+    .cell.Z { background: linear-gradient(145deg, #ff5252, #ff1744); box-shadow: 0 0 10px #ff5252; }
+    .cell.J { background: linear-gradient(145deg, #448aff, #2979ff); box-shadow: 0 0 10px #448aff; }
+    .cell.L { background: linear-gradient(145deg, #ff9100, #ff6d00); box-shadow: 0 0 10px #ff9100; }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .info-box {
+      background: #0f0f23;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .info-box h3 {
+      margin-bottom: 15px;
+      color: #00f5ff;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .score {
+      font-size: 36px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+    }
+
+    .level, .lines {
+      font-size: 24px;
+      color: #aaa;
+      margin-top: 10px;
+    }
+
+    .next-piece {
+      display: grid;
+      grid-template-columns: repeat(4, 25px);
+      grid-template-rows: repeat(4, 25px);
+      gap: 1px;
+      background: #1a1a2e;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .next-cell {
+      width: 25px;
+      height: 25px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .controls button {
+      background: linear-gradient(145deg, #4a4a6a, #3a3a5a);
+      border: none;
+      color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .controls button:hover {
+      background: linear-gradient(145deg, #5a5a7a, #4a4a6a);
+      transform: translateY(-2px);
+    }
+
+    .controls button:active {
+      transform: translateY(0);
+    }
+
+    .start-btn {
+      grid-column: span 3;
+      background: linear-gradient(145deg, #00f5ff, #00c8cc) !important;
+      color: #1a1a2e !important;
+      font-weight: bold;
+      font-size: 18px !important;
+    }
+
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      padding: 40px;
+      border-radius: 16px;
+      text-align: center;
+      z-index: 100;
+    }
+
+    .game-over h2 {
+      font-size: 48px;
+      color: #ff5252;
+      margin-bottom: 20px;
+    }
+
+    .instructions {
+      background: #0f0f23;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .instructions h3 {
+      color: #00f5ff;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .instructions p {
+      color: #aaa;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .instructions span {
+      color: #fff;
+      background: #4a4a6a;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="game-container">
+      <div class="game-board" style="position: relative;">
+        <div class="board">
+          <div
+            v-for="(cell, index) in displayBoard"
+            :key="index"
+            :class="['cell', cell]"
+          ></div>
+        </div>
+        
+        <div v-if="gameOver" class="game-over">
+          <h2>GAME OVER</h2>
+          <p style="font-size: 24px; margin-bottom: 20px;">得分: {{ score }}</p>
+          <button @click="startGame" class="start-btn" style="padding: 15px 40px;">
+            重新开始
+          </button>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div class="info-box">
+          <h3>得分</h3>
+          <div class="score">{{ score }}</div>
+          <div class="level">等级: {{ level }}</div>
+          <div class="lines">消除: {{ lines }}</div>
+        </div>
+
+        <div class="info-box">
+          <h3>下一个</h3>
+          <div class="next-piece">
+            <div
+              v-for="(cell, index) in nextPieceDisplay"
+              :key="index"
+              :class="['next-cell', cell]"
+            ></div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h3>控制</h3>
+          <div class="controls">
+            <button @click="startGame" class="start-btn">
+              {{ isPlaying ? '暂停' : '开始' }}
+            </button>
+            <button @click="moveLeft">← 左</button>
+            <button @click="rotate">↻ 旋转</button>
+            <button @click="moveRight">右 →</button>
+            <button @click="moveDown">↓ 下降</button>
+            <button @click="hardDrop">⤓ 掉落</button>
+          </div>
+        </div>
+
+        <div class="instructions">
+          <h3>操作说明</h3>
+          <p><span>←</span> <span>→</span> 左右移动</p>
+          <p><span>↑</span> 旋转</p>
+          <p><span>↓</span> 加速下降</p>
+          <p><span>空格</span> 直接掉落</p>
+          <p><span>P</span> 暂停</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+    // 方块定义
+    const TETROMINOES = {
+      I: {
+        shape: [[1, 1, 1, 1]],
+        color: 'I'
+      },
+      O: {
+        shape: [[1, 1], [1, 1]],
+        color: 'O'
+      },
+      T: {
+        shape: [[0, 1, 0], [1, 1, 1]],
+        color: 'T'
+      },
+      S: {
+        shape: [[0, 1, 1], [1, 1, 0]],
+        color: 'S'
+      },
+      Z: {
+        shape: [[1, 1, 0], [0, 1, 1]],
+        color: 'Z'
+      },
+      J: {
+        shape: [[1, 0, 0], [1, 1, 1]],
+        color: 'J'
+      },
+      L: {
+        shape: [[0, 0, 1], [1, 1, 1]],
+        color: 'L'
+      }
+    };
+
+    const BOARD_WIDTH = 10;
+    const BOARD_HEIGHT = 20;
+
+    createApp({
+      setup() {
+        // 游戏状态
+        const board = ref(Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill('')));
+        const currentPiece = ref(null);
+        const nextPiece = ref(null);
+        const score = ref(0);
+        const level = ref(1);
+        const lines = ref(0);
+        const gameOver = ref(false);
+        const isPlaying = ref(false);
+        const isPaused = ref(false);
+        let gameLoop = null;
+
+        // 创建新方块
+        const createPiece = () => {
+          const types = Object.keys(TETROMINOES);
+          const type = types[Math.floor(Math.random() * types.length)];
+          const tetromino = TETROMINOES[type];
+          return {
+            shape: tetromino.shape.map(row => [...row]),
+            color: tetromino.color,
+            x: Math.floor(BOARD_WIDTH / 2) - Math.floor(tetromino.shape[0].length / 2),
+            y: 0
+          };
+        };
+
+        // 生成下一个方块
+        const generateNextPiece = () => {
+          if (!nextPiece.value) {
+            nextPiece.value = createPiece();
+          }
+          currentPiece.value = nextPiece.value;
+          nextPiece.value = createPiece();
+        };
+
+        // 检查碰撞
+        const isValidPosition = (piece, offsetX = 0, offsetY = 0, newShape = null) => {
+          const shape = newShape || piece.shape;
+          for (let y = 0; y < shape.length; y++) {
+            for (let x = 0; x < shape[y].length; x++) {
+              if (shape[y][x]) {
+                const newX = piece.x + x + offsetX;
+                const newY = piece.y + y + offsetY;
+                if (newX < 0 || newX >= BOARD_WIDTH || newY >= BOARD_HEIGHT) return false;
+                if (newY >= 0 && board.value[newY][newX]) return false;
+              }
+            }
+          }
+          return true;
+        };
+
+        // 固定方块
+        const lockPiece = () => {
+          const piece = currentPiece.value;
+          for (let y = 0; y < piece.shape.length; y++) {
+            for (let x = 0; x < piece.shape[y].length; x++) {
+              if (piece.shape[y][x]) {
+                const boardY = piece.y + y;
+                const boardX = piece.x + x;
+                if (boardY >= 0) {
+                  board.value[boardY][boardX] = piece.color;
+                }
+              }
+            }
+          }
+        };
+
+        // 清除完整行
+        const clearLines = () => {
+          let linesCleared = 0;
+          for (let y = BOARD_HEIGHT - 1; y >= 0; y--) {
+            if (board.value[y].every(cell => cell !== '')) {
+              board.value.splice(y, 1);
+              board.value.unshift(Array(BOARD_WIDTH).fill(''));
+              linesCleared++;
+              y++;
+            }
+          }
+          if (linesCleared > 0) {
+            lines.value += linesCleared;
+            score.value += [0, 100, 300, 600, 1000][linesCleared] * level.value;
+            level.value = Math.floor(lines.value / 10) + 1;
+          }
+        };
+
+        // 旋转方块
+        const rotate = () => {
+          if (!isPlaying.value || isPaused.value || !currentPiece.value) return;
+          const piece = currentPiece.value;
+          const rotated = piece.shape[0].map((_, i) =>
+            piece.shape.map(row => row[i]).reverse()
+          );
+          if (isValidPosition(piece, 0, 0, rotated)) {
+            piece.shape = rotated;
+          }
+        };
+
+        // 移动
+        const moveLeft = () => {
+          if (!isPlaying.value || isPaused.value || !currentPiece.value) return;
+          if (isValidPosition(currentPiece.value, -1, 0)) {
+            currentPiece.value.x--;
+          }
+        };
+
+        const moveRight = () => {
+          if (!isPlaying.value || isPaused.value || !currentPiece.value) return;
+          if (isValidPosition(currentPiece.value, 1, 0)) {
+            currentPiece.value.x++;
+          }
+        };
+
+        const moveDown = () => {
+          if (!isPlaying.value || isPaused.value || !currentPiece.value) return;
+          if (isValidPosition(currentPiece.value, 0, 1)) {
+            currentPiece.value.y++;
+            score.value += 1;
+          } else {
+            lockPiece();
+            clearLines();
+            generateNextPiece();
+            if (!isValidPosition(currentPiece.value)) {
+              gameOver.value = true;
+              isPlaying.value = false;
+              clearInterval(gameLoop);
+            }
+          }
+        };
+
+        const hardDrop = () => {
+          if (!isPlaying.value || isPaused.value || !currentPiece.value) return;
+          let dropDistance = 0;
+          while (isValidPosition(currentPiece.value, 0, dropDistance + 1)) {
+            dropDistance++;
+          }
+          currentPiece.value.y += dropDistance;
+          score.value += dropDistance * 2;
+          lockPiece();
+          clearLines();
+          generateNextPiece();
+          if (!isValidPosition(currentPiece.value)) {
+            gameOver.value = true;
+            isPlaying.value = false;
+            clearInterval(gameLoop);
+          }
+        };
+
+        // 显示面板
+        const displayBoard = computed(() => {
+          const display = board.value.map(row => [...row]);
+          if (currentPiece.value) {
+            const piece = currentPiece.value;
+            for (let y = 0; y < piece.shape.length; y++) {
+              for (let x = 0; x < piece.shape[y].length; x++) {
+                if (piece.shape[y][x]) {
+                  const boardY = piece.y + y;
+                  const boardX = piece.x + x;
+                  if (boardY >= 0 && boardY < BOARD_HEIGHT && boardX >= 0 && boardX < BOARD_WIDTH) {
+                    display[boardY][boardX] = piece.color;
+                  }
+                }
+              }
+            }
+          }
+          return display.flat();
+        });
+
+        // 下一个方块显示
+        const nextPieceDisplay = computed(() => {
+          const display = Array(16).fill('');
+          if (nextPiece.value) {
+            const piece = nextPiece.value;
+            const offsetX = Math.floor((4 - piece.shape[0].length) / 2);
+            const offsetY = Math.floor((4 - piece.shape.length) / 2);
+            for (let y = 0; y < piece.shape.length; y++) {
+              for (let x = 0; x < piece.shape[y].length; x++) {
+                if (piece.shape[y][x]) {
+                  display[(y + offsetY) * 4 + (x + offsetX)] = piece.color;
+                }
+              }
+            }
+          }
+          return display;
+        });
+
+        // 游戏循环
+        const gameStep = () => {
+          if (!isPaused.value) {
+            moveDown();
+          }
+        };
+
+        // 开始游戏
+        const startGame = () => {
+          if (gameOver.value) {
+            board.value = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(''));
+            score.value = 0;
+            level.value = 1;
+            lines.value = 0;
+            gameOver.value = false;
+            nextPiece.value = null;
+          }
+          
+          if (!isPlaying.value) {
+            isPlaying.value = true;
+            isPaused.value = false;
+            if (!currentPiece.value) {
+              generateNextPiece();
+            }
+            gameLoop = setInterval(gameStep, Math.max(100, 1000 - (level.value - 1) * 100));
+          } else {
+            isPaused.value = !isPaused.value;
+          }
+        };
+
+        // 键盘控制
+        const handleKeydown = (e) => {
+          if (!isPlaying.value && e.key !== ' ') return;
+          
+          switch(e.key) {
+            case 'ArrowLeft':
+              e.preventDefault();
+              moveLeft();
+              break;
+            case 'ArrowRight':
+              e.preventDefault();
+              moveRight();
+              break;
+            case 'ArrowDown':
+              e.preventDefault();
+              moveDown();
+              break;
+            case 'ArrowUp':
+              e.preventDefault();
+              rotate();
+              break;
+            case ' ':
+              e.preventDefault();
+              if (!isPlaying.value) {
+                startGame();
+              } else {
+                hardDrop();
+              }
+              break;
+            case 'p':
+            case 'P':
+              if (isPlaying.value) {
+                isPaused.value = !isPaused.value;
+              }
+              break;
+          }
+        };
+
+        onMounted(() => {
+          window.addEventListener('keydown', handleKeydown);
+        });
+
+        onUnmounted(() => {
+          window.removeEventListener('keydown', handleKeydown);
+          clearInterval(gameLoop);
+        });
+
+        return {
+          board,
+          displayBoard,
+          nextPieceDisplay,
+          score,
+          level,
+          lines,
+          gameOver,
+          isPlaying,
+          startGame,
+          moveLeft,
+          moveRight,
+          moveDown,
+          rotate,
+          hardDrop
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
