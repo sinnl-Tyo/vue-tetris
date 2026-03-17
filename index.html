@@ -38,35 +38,36 @@
 
     .game-container {
       display: flex;
-      gap: 30px;
-      padding: 20px;
-      max-width: 1200px;
+      gap: 40px;
+      padding: 30px;
       width: 100%;
+      max-width: 1400px;
       justify-content: center;
+      align-items: flex-start;
     }
 
     .game-board {
       background: #0f0f23;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 16px;
+      padding: 25px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       flex-shrink: 0;
     }
 
     .board {
       display: grid;
-      grid-template-columns: repeat(10, 30px);
-      grid-template-rows: repeat(20, 30px);
-      gap: 1px;
+      grid-template-columns: repeat(10, clamp(32px, 4vw, 56px));
+      grid-template-rows: repeat(20, clamp(32px, 4vw, 56px));
+      gap: 2px;
       background: #1a1a2e;
       border: 3px solid #4a4a6a;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
     }
 
     .cell {
-      width: 30px;
-      height: 30px;
+      width: clamp(32px, 4vw, 56px);
+      height: clamp(32px, 4vw, 56px);
       transition: background-color 0.1s;
     }
 
@@ -85,53 +86,53 @@
     .side-panel {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      width: 250px;
+      gap: 25px;
+      width: clamp(220px, 22vw, 320px);
       flex-shrink: 0;
     }
 
     .info-box {
       background: #0f0f23;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 16px;
+      padding: 25px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     .info-box h3 {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       color: #00f5ff;
-      font-size: 18px;
+      font-size: clamp(16px, 1.5vw, 22px);
       text-transform: uppercase;
       letter-spacing: 2px;
     }
 
     .score {
-      font-size: 36px;
+      font-size: clamp(32px, 3vw, 48px);
       font-weight: bold;
       color: #fff;
       text-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
     }
 
     .level, .lines {
-      font-size: 24px;
+      font-size: clamp(18px, 1.5vw, 26px);
       color: #aaa;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .next-piece {
       display: grid;
-      grid-template-columns: repeat(4, 25px);
-      grid-template-rows: repeat(4, 25px);
-      gap: 1px;
+      grid-template-columns: repeat(4, clamp(28px, 3vw, 40px));
+      grid-template-rows: repeat(4, clamp(28px, 3vw, 40px));
+      gap: 2px;
       background: #1a1a2e;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 12px;
+      border-radius: 10px;
       margin-top: 10px;
     }
 
     .next-cell {
-      width: 25px;
-      height: 25px;
+      width: clamp(28px, 3vw, 40px);
+      height: clamp(28px, 3vw, 40px);
     }
 
     .controls {
