@@ -2,15 +2,17 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>Vue3 + TS 俄罗斯方块</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://unpkg.com/typescript@latest/lib/typescript.js"></script>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -21,12 +23,23 @@
       justify-content: center;
       align-items: center;
       color: #fff;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #app {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .game-container {
       display: flex;
       gap: 30px;
       padding: 20px;
+      max-width: 100%;
     }
 
     .game-board {
@@ -69,6 +82,7 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      min-width: 200px;
     }
 
     .info-box {
@@ -131,6 +145,7 @@
       cursor: pointer;
       font-size: 14px;
       transition: all 0.2s;
+      user-select: none;
     }
 
     .controls button:hover {
@@ -139,7 +154,7 @@
     }
 
     .controls button:active {
-      transform: translateY(0);
+      transform: translateY(0) scale(0.95);
     }
 
     .start-btn {
@@ -193,6 +208,190 @@
       padding: 2px 8px;
       border-radius: 4px;
       font-family: monospace;
+    }
+
+    /* 触摸控制区域 */
+    .touch-controls {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      padding: 0 20px;
+      z-index: 50;
+    }
+
+    .touch-btn {
+      background: linear-gradient(145deg, rgba(74, 74, 106, 0.8), rgba(58, 58, 90, 0.8));
+      border: 2px solid rgba(0, 245, 255, 0.3);
+      color: #fff;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      user-select: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.1s;
+    }
+
+    .touch-btn:active {
+      transform: scale(0.9);
+      background: linear-gradient(145deg, rgba(0, 245, 255, 0.3), rgba(0, 200, 204, 0.3));
+    }
+
+    .touch-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 10px 0;
+    }
+
+    .touch-row.main {
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .touch-btn.large {
+      width: 80px;
+      height: 80px;
+      font-size: 32px;
+    }
+
+    .touch-btn.rotate {
+      background: linear-gradient(145deg, rgba(224, 64, 251, 0.5), rgba(213, 0, 249, 0.5));
+    }
+
+    .touch-btn.drop {
+      background: linear-gradient(145deg, rgba(255, 82, 82, 0.5), rgba(255, 23, 68, 0.5));
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      body {
+        align-items: flex-start;
+        padding-top: 10px;
+      }
+
+      .game-container {
+        flex-direction: column;
+        gap: 15px;
+        padding: 10px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .game-board {
+        padding: 10px;
+        order: 1;
+      }
+
+      .board {
+        grid-template-columns: repeat(10, min(calc((100vw - 60px) / 10), 28px));
+        grid-template-rows: repeat(20, min(calc((100vw - 60px) / 10), 28px));
+      }
+
+      .cell {
+        width: min(calc((100vw - 60px) / 10), 28px);
+        height: min(calc((100vw - 60px) / 10), 28px);
+      }
+
+      .side-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+        order: 2;
+        min-width: auto;
+      }
+
+      .info-box {
+        flex: 1;
+        min-width: 140px;
+        padding: 15px;
+      }
+
+      .info-box h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .score {
+        font-size: 24px;
+      }
+
+      .level, .lines {
+        font-size: 16px;
+        margin-top: 5px;
+      }
+
+      .next-piece {
+        grid-template-columns: repeat(4, 20px);
+        grid-template-rows: repeat(4, 20px);
+      }
+
+      .next-cell {
+        width: 20px;
+        height: 20px;
+      }
+
+      .controls {
+        display: none;
+      }
+
+      .instructions {
+        display: none;
+      }
+
+      .touch-controls {
+        display: block;
+      }
+
+      .game-over {
+        padding: 30px 20px;
+        width: 90%;
+        max-width: 300px;
+      }
+
+      .game-over h2 {
+        font-size: 36px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .board {
+        grid-template-columns: repeat(10, 24px);
+        grid-template-rows: repeat(20, 24px);
+      }
+
+      .cell {
+        width: 24px;
+        height: 24px;
+      }
+
+      .touch-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 20px;
+      }
+
+      .touch-btn.large {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+      }
+    }
+
+    /* 防止移动端滚动 */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+      }
     }
   </style>
 </head>
@@ -260,6 +459,27 @@
         </div>
       </div>
     </div>
+
+    <!-- 移动端触摸控制 -->
+    <div class="touch-controls" v-if="isMobile">
+      <div class="touch-row">
+        <div class="touch-btn rotate" @touchstart.prevent="rotate" @click="rotate">↻</div>
+      </div>
+      <div class="touch-row main">
+        <div class="touch-btn" @touchstart.prevent="moveLeft" @click="moveLeft">←</div>
+        <div class="touch-btn large drop" @touchstart.prevent="hardDrop" @click="hardDrop">⤓</div>
+        <div class="touch-btn" @touchstart.prevent="moveRight" @click="moveRight">→</div>
+      </div>
+      <div class="touch-row">
+        <div class="touch-btn large" @touchstart.prevent="moveDown" @click="moveDown" 
+             @touchstart.prevent.repeat="startAutoDown" @touchend.prevent="stopAutoDown">↓</div>
+      </div>
+      <div class="touch-row" style="margin-top: 15px;">
+        <div class="touch-btn" @touchstart.prevent="startGame" @click="startGame" style="font-size: 14px; border-radius: 20px; width: auto; padding: 0 20px;">
+          {{ isPlaying ? '暂停' : '开始' }}
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -312,7 +532,14 @@
         const gameOver = ref(false);
         const isPlaying = ref(false);
         const isPaused = ref(false);
+        const isMobile = ref(false);
         let gameLoop = null;
+        let autoDownInterval = null;
+
+        // 检测是否为移动设备
+        const checkMobile = () => {
+          isMobile.value = window.innerWidth <= 768 || 'ontouchstart' in window;
+        };
 
         // 创建新方块
         const createPiece = () => {
@@ -427,6 +654,21 @@
               isPlaying.value = false;
               clearInterval(gameLoop);
             }
+          }
+        };
+
+        // 长按自动下降
+        const startAutoDown = () => {
+          if (autoDownInterval) return;
+          autoDownInterval = setInterval(() => {
+            moveDown();
+          }, 100);
+        };
+
+        const stopAutoDown = () => {
+          if (autoDownInterval) {
+            clearInterval(autoDownInterval);
+            autoDownInterval = null;
           }
         };
 
@@ -554,13 +796,68 @@
           }
         };
 
+        // 触摸滑动控制
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        const handleTouchStart = (e) => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        };
+
+        const handleTouchMove = (e) => {
+          e.preventDefault();
+        };
+
+        const handleTouchEnd = (e) => {
+          if (!isPlaying.value || isPaused.value) return;
+          
+          const touchEndX = e.changedTouches[0].clientX;
+          const touchEndY = e.changedTouches[0].clientY;
+          
+          const deltaX = touchEndX - touchStartX;
+          const deltaY = touchEndY - touchStartY;
+          
+          const minSwipeDistance = 30;
+          
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            if (Math.abs(deltaX) > minSwipeDistance) {
+              if (deltaX > 0) {
+                moveRight();
+              } else {
+                moveLeft();
+              }
+            }
+          } else {
+            if (Math.abs(deltaY) > minSwipeDistance) {
+              if (deltaY > 0) {
+                moveDown();
+              } else {
+                rotate();
+              }
+            }
+          }
+        };
+
         onMounted(() => {
+          checkMobile();
           window.addEventListener('keydown', handleKeydown);
+          window.addEventListener('resize', checkMobile);
+          
+          // 添加触摸事件
+          const board = document.querySelector('.board');
+          if (board) {
+            board.addEventListener('touchstart', handleTouchStart, { passive: true });
+            board.addEventListener('touchmove', handleTouchMove, { passive: false });
+            board.addEventListener('touchend', handleTouchEnd, { passive: true });
+          }
         });
 
         onUnmounted(() => {
           window.removeEventListener('keydown', handleKeydown);
+          window.removeEventListener('resize', checkMobile);
           clearInterval(gameLoop);
+          clearInterval(autoDownInterval);
         });
 
         return {
@@ -572,12 +869,15 @@
           lines,
           gameOver,
           isPlaying,
+          isMobile,
           startGame,
           moveLeft,
           moveRight,
           moveDown,
           rotate,
-          hardDrop
+          hardDrop,
+          startAutoDown,
+          stopAutoDown
         };
       }
     }).mount('#app');
